@@ -3,6 +3,7 @@ package main
 import (
     "machine"
 	"machine/usb/hid/keyboard"
+	//"os"
     "time"
 )
 
@@ -20,7 +21,7 @@ var (
 	}
 
 	KeyNO keyboard.Keycode = 0x00
-	KeyFN keyboard.Keycode = 0xC0
+	KeyFN keyboard.Keycode = 0x00
 
 	KEYMAP = [...][61]keyboard.Keycode{
 		{
@@ -78,6 +79,14 @@ func IsContain(items []int, item int) int {
 	return -1
 }
 
+func ChkErr(n int, e error) {
+	if e != nil {
+		print("line:",n)
+		println(e)
+		//os.Exit(0)
+	}
+}
+
 func main() {
 	btn := machine.BUTTON
 	btn.Configure(machine.PinConfig{Mode: machine.PinInput})
@@ -112,20 +121,26 @@ func main() {
 				println("Layer 0")
 				continue
 			}
-			print("Release:")
+			err := keyboard.Up(KEYMAP[layer][IsContain(COORDS,key)])
+			ChkErr(125, err)
+			print("Release: ")
 			println(key, KEYMAP[layer][IsContain(COORDS,key)])
-			keyboard.Up(KEYMAP[layer][IsContain(COORDS,key)])
 		}
 
+		if len(new_keys) > 6 {
+			println("Max! Drop other...")
+			break
+		}
 		for _, key := range new_keys {
 			if KEYMAP[layer][IsContain(COORDS,key)] == KeyFN {
 				layer = 1
-				print("Layer 1")
+				println("Layer 1")
 				continue
 			}
-			println("Press:")
+			err := keyboard.Down(KEYMAP[layer][IsContain(COORDS,key)])
+			ChkErr(138, err)
+			print("Press: ")
 			println(key, KEYMAP[layer][IsContain(COORDS,key)])
-			keyboard.Down(KEYMAP[layer][IsContain(COORDS,key)])
 		}
 		time.Sleep(time.Millisecond * 1)
 	}
