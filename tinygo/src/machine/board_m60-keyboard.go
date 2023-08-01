@@ -22,7 +22,7 @@ package machine
 
 const HasLowFrequencyCrystal = true
 
-// LEDs on the m600-keyboard (nRF52840 m.2 dev board)
+// LEDs on the m60-keyboard (nRF52840 m.2 dev board)
 const (
 	LED       Pin = LED_GREEN
 	LED_GREEN Pin = P0_29
@@ -40,15 +40,15 @@ const (
 	QSPI_DATA3 = P1_12
 )
 
-// LED I2C pins on the m600-keyboard (unused)
+// LED I2C pins on the m60-keyboard (unused)
 const (
 	SDA_PIN = P1_05
 	SCL_PIN = P1_06
 )
 
 const (
-	POWER = P1_04
-	INTERRUPT = P1_07
+	RGB_POWER = P1_04
+	RGB_INTERRUPT = P1_07
 )
 
 // board
@@ -76,6 +76,7 @@ const (
 
 // Battery
 const (
+	POWER_PULLUP_PIN = P0_28
 	CHARGING = P0_03
 	VOLTAGE = P0_02
 )
