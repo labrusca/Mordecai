@@ -1,16 +1,8 @@
 package is31fl3733
 
 // Registers. Names taken from the datasheet:
-// https://www.lumissil.com/assets/pdf/core/IS31FL3731_DS.pdf
+// https://www.lumissil.com/assets/pdf/core/IS31FL3733_DS.pdf
 const (
-	// AD pin connected to GND
-	//I2C_ADDRESS_74 uint8 = 0x74
-	// AD pin connected to SCL
-	//I2C_ADDRESS_75 uint8 = 0x75
-	// AD pin connected to SDA
-	//I2C_ADDRESS_76 uint8 = 0x76
-	// AD pin connected to VCC
-	//I2C_ADDRESS_77 uint8 = 0x77
 
 	ADDRESS uint8 = 0x50
 
