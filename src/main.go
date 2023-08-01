@@ -16,11 +16,11 @@ var (
 	COLS = [8]machine.Pin{machine.P0_19, machine.P0_20, machine.P0_21, machine.P0_22, machine.P0_23, machine.P0_24, machine.P0_25, machine.P0_26}
 
 	COORDS = []int{
-		0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13,
-		27,26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14,
-		28,29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39,     40,
-		52,51, 50, 49, 48, 47, 46, 45, 44, 43, 42,         41,
-		53,  54, 55,             56,           57, 58, 59, 60,
+		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+		27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14,
+		28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+		52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41,
+		53, 54, 55, 56, 57, 58, 59, 60,
 	}
 
 	KeyNO keyboard.Keycode = 0x00
@@ -51,13 +51,13 @@ func Scan() ([]int, []int, []int, error) {
 	var new_keys []int
 	var inter_pressed_keys []int
 	released_keys := pressed_keys
-	for c, _ :=  range COLS{
+	for c, _ := range COLS {
 		COLS[c].High()
-		for r, _ := range ROWS{
+		for r, _ := range ROWS {
 			if ROWS[r].Get() {
-				key := r * len(COLS) + c
+				key := r*len(COLS) + c
 				inter_pressed_keys = append(inter_pressed_keys, key)
-				deleteIndex := IsContain(released_keys,key)
+				deleteIndex := IsContain(released_keys, key)
 				if deleteIndex != -1 {
 					released_keys = append(released_keys[:deleteIndex], released_keys[(deleteIndex+1):]...)
 				} else {
@@ -74,7 +74,7 @@ func Scan() ([]int, []int, []int, error) {
 	return pressed_keys, released_keys, new_keys, nil
 }
 
-//https://blog.csdn.net/m0_37422289/article/details/103570799 CC 4.0 BY-SA
+// https://blog.csdn.net/m0_37422289/article/details/103570799 CC 4.0 BY-SA
 func IsContain(items []int, item int) int {
 	for i, eachItem := range items {
 		if eachItem == item {
@@ -102,7 +102,6 @@ func power_init() {
 	power.Configure(machine.PinConfig{Mode: machine.PinInputPullup})
 }
 
-
 func main() {
 	//power_init()
 	btn := machine.BUTTON
@@ -121,24 +120,24 @@ func main() {
 
 	rgb := is31fl3733.New(machine.I2C0, is31fl3733.FUNCTION_REGISTER)
 	err := rgb.Bus.Configure(machine.I2CConfig{
-		Mode: machine.I2CModeController,
+		Mode:      machine.I2CModeController,
 		Frequency: 400000,
-        SCL: machine.SCL_PIN,
-        SDA: machine.SDA_PIN,
-    })
-    if err != nil {
-        println("could not configure I2C:", err)
-    }
+		SCL:       machine.SCL_PIN,
+		SDA:       machine.SDA_PIN,
+	})
+	if err != nil {
+		println("could not configure I2C:", err)
+	}
 
 	err = rgb.Init()
 	println("RGB init done!")
 	if err != nil {
-        println("could not init:", err)
-    }
+		println("could not init:", err)
+	}
 	err = rgb.EnableAllPixels()
 	if err != nil {
-        println("could not open lights:", err)
-    }
+		println("could not open lights:", err)
+	}
 	println("RGB all open!")
 
 	led := machine.LED_BLUE
@@ -153,7 +152,6 @@ func main() {
 	led.High()
 	time.Sleep(time.Millisecond * 500)
 
-
 	for i, _ := range ROWS {
 		ROWS[i].Configure(machine.PinConfig{Mode: machine.PinInputPulldown})
 	}
@@ -161,11 +159,9 @@ func main() {
 		COLS[j].Configure(machine.PinConfig{Mode: machine.PinOutput})
 	}
 
-
 	var kb = keyboard.New()
 	var layer int
 	layer = 0
-
 
 	for {
 		// Press the button for entering Bootloader
@@ -174,20 +170,20 @@ func main() {
 			machine.EnterUF2Bootloader()
 		}
 
-		_, released_keys, new_keys, err:= Scan()
+		_, released_keys, new_keys, err := Scan()
 		if err != nil {
 			log.Println(err)
 		}
 
 		for _, key := range released_keys {
-			keycode := KEYMAP[layer][IsContain(COORDS,key)]
+			keycode := KEYMAP[layer][IsContain(COORDS, key)]
 			if keycode == KeyFN {
-				rgb.Set_PWM_Pixel(key, [3]uint8{0,0,0})
+				rgb.Set_PWM_Pixel(key, [3]uint8{0, 0, 0})
 				layer = 0
 				log.Print("Layer 0\n")
 				continue
 			}
-			err := rgb.Set_PWM_Pixel(key, [3]uint8{0,0,0})
+			err := rgb.Set_PWM_Pixel(key, [3]uint8{0, 0, 0})
 			ChkErr(183, err)
 			err = kb.Up(keycode)
 			ChkErr(185, err)
@@ -195,23 +191,22 @@ func main() {
 			fmt.Print(key, keycode)
 		}
 
-
 		for _, key := range new_keys {
-			keycode := KEYMAP[layer][IsContain(COORDS,key)]
+			keycode := KEYMAP[layer][IsContain(COORDS, key)]
 			if keycode == KeyFN {
-				rgb.Set_PWM_Pixel(key, [3]uint8{255,255,0})
+				rgb.Set_PWM_Pixel(key, [3]uint8{255, 255, 0})
 				layer = 1
 				log.Print("Layer 1\n")
 				continue
 			}
-			err := rgb.Set_PWM_Pixel(key, [3]uint8{255,255,255})
+			err := rgb.Set_PWM_Pixel(key, [3]uint8{255, 255, 255})
 			ChkErr(199, err)
 			err = kb.Down(keycode)
 			ChkErr(201, err)
 			fmt.Print("Press: ")
 			fmt.Print(key, keycode)
 		}
-		
+
 	}
 	kb.Release()
 	log.Print(fmt.Errorf("Unknow Error!"))

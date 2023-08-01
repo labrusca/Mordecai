@@ -3,8 +3,6 @@
 //
 // Driver supports following layouts:
 //   - any custom LED matrix layout
-//   - Adafruit 16x12 CharliePlex LED Matrix FeatherWing (CharlieWing)
-//     https://www.adafruit.com/product/3163
 //
 // Datasheet:
 //    https://www.lumissil.com/assets/pdf/core/IS31FL3733_DS.pdf
@@ -24,10 +22,9 @@ import (
 
 // Device implements TinyGo driver for Lumissil IS31FL3733 matrix LED driver
 
-
 type Device struct {
 	//Address uint8
-	Bus     *machine.I2C
+	Bus *machine.I2C
 
 	// Currently selected Page register (one of the frame registers or the
 	// function register)
@@ -39,7 +36,7 @@ type Device struct {
 
 func New(bus *machine.I2C, SPage uint8) Device {
 	return Device{
-		Bus:     bus,
+		Bus:          bus,
 		SelectedPage: SPage,
 	}
 }
@@ -50,7 +47,6 @@ func (d *Device) Init() (err error) {
 	backlightPower := machine.RGB_POWER
 	backlightPower.Configure(machine.PinConfig{Mode: machine.PinOutput})
 	backlightPower.High()
-
 
 	err = d.SelectPage(FUNCTION_REGISTER)
 	if err != nil {
@@ -77,7 +73,7 @@ func (d *Device) Init() (err error) {
 	}
 
 	// init pixels
-	for i:=0;i<192;i++ {
+	for i := 0; i < 192; i++ {
 		d.pixels[i] = 0x01
 	}
 
@@ -95,7 +91,7 @@ func (d *Device) Init() (err error) {
 }
 
 // selectPage selects Page register, can be:
-// - PWM registers 
+// - PWM registers
 // - function register
 func (d *Device) SelectPage(Page uint8) (err error) {
 
@@ -120,7 +116,6 @@ func (d *Device) WriteCommonReg(reg_addr uint8, data uint8) (err error) {
 	}
 	return nil
 }
-
 
 // WritePagedReg selects the function register and writes data into it
 func (d *Device) WritePagedReg(reg_addr uint8, data uint8) (err error) {
@@ -148,37 +143,36 @@ func (d *Device) EnableAllPixels() error {
 		data[i] = 255
 	}
 
-	for i:=0;i<12;i++ {
+	for i := 0; i < 12; i++ {
 		err := d.Bus.WriteRegister(ADDRESS, uint8(i*16), data)
 		if err != nil {
 			return fmt.Errorf("failed to write all pixels: %w", err)
 		}
 	}
-	for i:=0;i<192;i++ {
+	for i := 0; i < 192; i++ {
 		d.pixels[i] = 255
 	}
 	return nil
 }
 
-
 func (d *Device) Set_PWM_Pixel(index int, value [3]uint8) (err error) {
 	buffer := make([]byte, 192)
 	row := index / 16
 	col := index & 15
-	offset := row * 48 + col
+	offset := row*48 + col
 	buffer[offset] = value[1]
-	buffer[offset + 16] = value[0]
-	buffer[offset + 32] = value[2]
-	if index ==56 {
+	buffer[offset+16] = value[0]
+	buffer[offset+32] = value[2]
+	if index == 56 {
 		// No.61 and No.62 are under the space key.
 		// 61
 		buffer[157] = value[1]
-		buffer[157 + 16] = value[0]
-		buffer[157 + 32] = value[2]
+		buffer[157+16] = value[0]
+		buffer[157+32] = value[2]
 		// 62
 		buffer[158] = value[1]
-		buffer[158 + 16] = value[0]
-		buffer[158 + 32] = value[2]
+		buffer[158+16] = value[0]
+		buffer[158+32] = value[2]
 	}
 	err = d.SelectPage(PWM_REGISTER)
 	if err != nil {

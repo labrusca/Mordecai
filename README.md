@@ -8,7 +8,7 @@ Project Mordecai is a keyboard firmware for Makerdiary M60 Keyboard based on tin
 - [ ] Rewrite Golang code
 
 ## Notice
-**First, you need add some files to your TINYGOROOT**
+**First, you need add some files to your TINYGOROOT:**  
 Put file folder "tinygo" in your tinygo path before building.
 
 ## build
