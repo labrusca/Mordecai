@@ -1,8 +1,9 @@
 # Mordecai
-Project Mordecai is a keyboard firmware for Makerdiary M60 Keyboard based on [TinyGo](https://github.com/tinygo-org/tinygo)
+Project Mordecai is a keyboard firmware for [Makerdiary M60 Keyboard](https://wiki.makerdiary.com/m60/) based on [TinyGo](https://github.com/tinygo-org/tinygo)
 
 ## Plan
 - [x] Base USB Keyboard function
+- [ ] Custom Extensions
 - [ ] Bluetooth Support
 - [x] Add is31fl3733 Driver(Only PWM mode for now)
 - [ ] Add MX25R6435F Driver
@@ -14,7 +15,7 @@ Project Mordecai is a keyboard firmware for Makerdiary M60 Keyboard based on [Ti
 **First, you need add some files to your TINYGOROOT:**  
 Put file folder "tinygo" in your tinygo path before building.
 
-## build
+## Build
 Run:
 ```
 tinygo build -o KB-m60.uf2 -tagets m60-keyboard main.go

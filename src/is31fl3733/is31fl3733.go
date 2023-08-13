@@ -74,7 +74,7 @@ func (d *Device) Init() (err error) {
 
 	// init pixels
 	for i := 0; i < 192; i++ {
-		d.pixels[i] = 0x01
+		d.pixels[i] = 0x00
 	}
 
 	// set brightness
@@ -136,27 +136,15 @@ func (d *Device) EnableAllPixels() error {
 	if err != nil {
 		return fmt.Errorf("failed to write all pixels: %w", err)
 	}
-	d.SelectPage(PWM_REGISTER)
 
-	data := make([]byte, 16)
-	for i := range data {
-		data[i] = 255
-	}
-
-	for i := 0; i < 12; i++ {
-		err := d.Bus.WriteRegister(ADDRESS, uint8(i*16), data)
-		if err != nil {
-			return fmt.Errorf("failed to write all pixels: %w", err)
-		}
-	}
-	for i := 0; i < 192; i++ {
-		d.pixels[i] = 255
-	}
 	return nil
 }
 
 func (d *Device) Set_PWM_Pixel(index int, value [3]uint8) (err error) {
 	buffer := make([]byte, 192)
+	for i := 0; i < 192; i++ {
+		buffer[i] = d.pixels[i]
+	}
 	row := index / 16
 	col := index & 15
 	offset := row*48 + col
@@ -177,6 +165,9 @@ func (d *Device) Set_PWM_Pixel(index int, value [3]uint8) (err error) {
 	err = d.SelectPage(PWM_REGISTER)
 	if err != nil {
 		return fmt.Errorf("failed to write page register: %w", err)
+	}
+	for i := 0; i < 192; i++ {
+		d.pixels[i] = buffer[i]
 	}
 	return d.Bus.WriteRegister(ADDRESS, 0x00, buffer)
 }

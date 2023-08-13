@@ -140,16 +140,15 @@ func main() {
 	}
 	println("RGB all open!")
 
-	led := machine.LED_BLUE
-	led.Configure(machine.PinConfig{Mode: machine.PinOutput})
-	led.Low()
+
+	rgb.Set_PWM_Pixel(63, [3]uint8{0, 0, 255})
 	time.Sleep(time.Millisecond * 500)
-	led.High()
+	rgb.Set_PWM_Pixel(63, [3]uint8{0, 0, 0})
 	time.Sleep(time.Millisecond * 500)
 
-	led.Low()
+	rgb.Set_PWM_Pixel(63, [3]uint8{0, 0, 255})
 	time.Sleep(time.Millisecond * 500)
-	led.High()
+	rgb.Set_PWM_Pixel(63, [3]uint8{0, 0, 0})
 	time.Sleep(time.Millisecond * 500)
 
 	for i, _ := range ROWS {
