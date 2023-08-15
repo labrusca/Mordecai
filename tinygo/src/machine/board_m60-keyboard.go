@@ -40,7 +40,7 @@ const (
 	QSPI_DATA3 = P1_12
 )
 
-// LED I2C pins on the m60-keyboard (unused)
+// LED I2C pins on the m60-keyboard
 const (
 	SDA_PIN = P1_05
 	SCL_PIN = P1_06

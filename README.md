@@ -2,10 +2,10 @@
 Project Mordecai is a keyboard firmware for [Makerdiary M60 Keyboard](https://wiki.makerdiary.com/m60/) based on [TinyGo](https://github.com/tinygo-org/tinygo)
 
 ## Plan
-- [x] Base USB Keyboard function
-- [ ] Custom Extensions
+- [x] Basic function of the USB Keyboard
+- [x] Custom Extensions
 - [ ] Bluetooth Support
-- [x] Add is31fl3733 Driver(Only PWM mode for now)
+- [x] Add is31fl3733 Driver as extension (Only PWM mode for now)
 - [ ] Add MX25R6435F Driver
 - [ ] USB Mass Storage Device Driver Support
 - [ ] NFC Support
