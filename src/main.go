@@ -1,122 +1,152 @@
 package main
 
 import (
-	"fmt"
+	"context"
+	_ "embed"
 	"log"
-	"m60/hardware"
-	"m60/extensions"
+	"m60/is31fl3733"
 	"machine"
-	"machine/usb/hid/keyboard"
-	//"os"
+	"machine/usb"
+	kc "machine/usb/hid/keyboard"
+	keyboard "github.com/sago35/tinygo-keyboard"
+	"github.com/sago35/tinygo-keyboard/keycodes/jp"
 	"time"
 )
 
-var KEYMAP = [...][61]keyboard.Keycode{
-	{
-		keyboard.KeyEsc, keyboard.Key1, keyboard.Key2, keyboard.Key3, keyboard.Key4, keyboard.Key5, keyboard.Key6, keyboard.Key7, keyboard.Key8, keyboard.Key9, keyboard.Key0, keyboard.KeyMinus, keyboard.KeyEqual, keyboard.KeyBackspace,
-		keyboard.KeyTab, keyboard.KeyQ, keyboard.KeyW, keyboard.KeyE, keyboard.KeyR, keyboard.KeyT, keyboard.KeyY, keyboard.KeyU, keyboard.KeyI, keyboard.KeyO, keyboard.KeyP, keyboard.KeyLeftBrace, keyboard.KeyRightBrace, keyboard.KeyBackslash,
-		keyboard.KeyCapsLock, keyboard.KeyA, keyboard.KeyS, keyboard.KeyD, keyboard.KeyF, keyboard.KeyG, keyboard.KeyH, keyboard.KeyJ, keyboard.KeyK, keyboard.KeyL, keyboard.KeySemicolon, keyboard.KeyQuote, keyboard.KeyEnter,
-		keyboard.KeyModifierLeftShift, keyboard.KeyZ, keyboard.KeyX, keyboard.KeyC, keyboard.KeyV, keyboard.KeyB, keyboard.KeyN, keyboard.KeyM, keyboard.KeyComma, keyboard.KeyPeriod, keyboard.KeySlash, keyboard.KeyModifierRightShift,
-		keyboard.KeyModifierLeftCtrl, keyboard.KeyModifierLeftAlt, keyboard.KeyModifierLeftGUI, keyboard.KeySpace, keyboard.KeyModifierRightAlt, keyboard.KeyMenu, KeyFN, keyboard.KeyModifierRightCtrl,
-	},
 
-	{
-		keyboard.KeyTilde, keyboard.KeyF1, keyboard.KeyF2, keyboard.KeyF3, keyboard.KeyF4, keyboard.KeyF5, keyboard.KeyF6, keyboard.KeyF7, keyboard.KeyF8, keyboard.KeyF9, keyboard.KeyF10, keyboard.KeyF11, keyboard.KeyF12, keyboard.KeyDelete,
-		KeyNO, KeyNO, keyboard.KeyUp, KeyNO, KeyNO, KeyNO, KeyNO, KeyNO, KeyNO, KeyNO, KeyNO, keyboard.KeyMediaVolumeDec, keyboard.KeyMediaVolumeInc, keyboard.KeyMediaMute,
-		KeyNO, keyboard.KeyLeft, keyboard.KeyDown, keyboard.KeyRight, KeyNO, KeyNO, KeyNO, KeyNO, KeyNO, KeyNO, keyboard.KeyF21, keyboard.KeyF20, KeyNO,
-		KeyNO, KeyNO, KeyNO, KeyNO, KeyNO, KeyNO, KeyNO, KeyNO, keyboard.KeyMediaPrevTrack, keyboard.KeyMediaNextTrack, keyboard.KeyMediaPlayPause, KeyNO,
-		KeyNO, KeyNO, KeyNO, KeyNO, KeyNO, KeyNO, KeyNO, KeyNO,
-	},
-}
+var (
+	ROWS = []machine.Pin{machine.P0_05, machine.P0_06, machine.P0_07, machine.P0_08, machine.P1_09, machine.P1_08, machine.P0_12, machine.P0_11}
+	COLS = []machine.Pin{machine.P0_19, machine.P0_20, machine.P0_21, machine.P0_22, machine.P0_23, machine.P0_24, machine.P0_25, machine.P0_26}
+	KeyBrightnessUp   = keyboard.Keycode(0xE400 | 0x6F)
+	KeyBrightnessDown = keyboard.Keycode(0xE400 | 0x70)
+	KEYMAP = [][]keyboard.Keycode{
+		{
+			keyboard.Keycode(kc.KeyEsc), keyboard.Keycode(kc.Key1), keyboard.Keycode(kc.Key2), keyboard.Keycode(kc.Key3), keyboard.Keycode(kc.Key4), keyboard.Keycode(kc.Key5), keyboard.Keycode(kc.Key6), keyboard.Keycode(kc.Key7), keyboard.Keycode(kc.Key8), keyboard.Keycode(kc.Key9), keyboard.Keycode(kc.Key0), keyboard.Keycode(kc.KeyMinus), keyboard.Keycode(kc.KeyEqual), keyboard.Keycode(kc.KeyBackspace),
+			keyboard.Keycode(kc.KeyTab), keyboard.Keycode(kc.KeyQ), keyboard.Keycode(kc.KeyW), keyboard.Keycode(kc.KeyE), keyboard.Keycode(kc.KeyR), keyboard.Keycode(kc.KeyT), keyboard.Keycode(kc.KeyY), keyboard.Keycode(kc.KeyU), keyboard.Keycode(kc.KeyI), keyboard.Keycode(kc.KeyO), keyboard.Keycode(kc.KeyP), keyboard.Keycode(kc.KeyLeftBrace), keyboard.Keycode(kc.KeyRightBrace), keyboard.Keycode(kc.KeyBackslash),
+			keyboard.Keycode(kc.KeyCapsLock), keyboard.Keycode(kc.KeyA), keyboard.Keycode(kc.KeyS), keyboard.Keycode(kc.KeyD), keyboard.Keycode(kc.KeyF), keyboard.Keycode(kc.KeyG), keyboard.Keycode(kc.KeyH), keyboard.Keycode(kc.KeyJ), keyboard.Keycode(kc.KeyK), keyboard.Keycode(kc.KeyL), keyboard.Keycode(kc.KeySemicolon), keyboard.Keycode(kc.KeyQuote), keyboard.Keycode(kc.KeyEnter),
+			keyboard.Keycode(kc.KeyModifierLeftShift), keyboard.Keycode(kc.KeyZ), keyboard.Keycode(kc.KeyX), keyboard.Keycode(kc.KeyC), keyboard.Keycode(kc.KeyV), keyboard.Keycode(kc.KeyB), keyboard.Keycode(kc.KeyN), keyboard.Keycode(kc.KeyM), keyboard.Keycode(kc.KeyComma), keyboard.Keycode(kc.KeyPeriod), keyboard.Keycode(kc.KeySlash), keyboard.Keycode(kc.KeyModifierRightShift),
+			keyboard.Keycode(kc.KeyModifierLeftCtrl), keyboard.Keycode(kc.KeyModifierLeftAlt), keyboard.Keycode(kc.KeyModifierLeftGUI), keyboard.Keycode(kc.KeySpace), keyboard.Keycode(kc.KeyModifierRightAlt), keyboard.Keycode(kc.KeyMenu), jp.KeyMod1, keyboard.Keycode(kc.KeyModifierRightCtrl),
+		},
 
-var KeyNO keyboard.Keycode = 0x00
-var KeyFN keyboard.Keycode = 0x00
+		{
+			jp.KeyHankaku, jp.KeyF1, jp.KeyF2, jp.KeyF3, jp.KeyF4, jp.KeyF5, jp.KeyF6, jp.KeyF7, jp.KeyF8, jp.KeyF9, jp.KeyF10, jp.KeyF11, jp.KeyF12, jp.KeyDelete,
+			jp.KeyTo0, jp.KeyHome, jp.KeyTo0, jp.KeyEnd, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyMediaVolumeDec, jp.KeyMediaVolumeInc, jp.KeyMediaMute,
+			jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyLeft, jp.KeyDown, jp.KeyUp, jp.KeyRight, KeyBrightnessDown, KeyBrightnessUp, jp.KeyTo0,
+			jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyMediaPrevTrack, jp.KeyMediaNextTrack, jp.KeyMediaPlayPause, jp.KeyTo0,
+			jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0, jp.KeyTo0,
+		},
+	}
+
+	COORDS = []int{
+		0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+		27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14,
+		28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+		52, 51, 50, 49, 48, 47, 46, 45, 44, 43, 42, 41,
+		53, 54, 55, 56, 57, 58, 59, 60,
+	}
+)
+
+//Init RGB LED
+var led = initRGB()
 
 func main() {
+	//machine.Flash.EraseBlocks(0, 1)
+	usb.Product = "M60-Keyboard-0.1.0"
+
 	//power_init()
 	btn := machine.BUTTON
 	btn.Configure(machine.PinConfig{Mode: machine.PinInput})
 
-	// For Debug
-	//for btn.Get() == true {
-	//	continue
-	//}
+	//openUART()
 
-	hardware.InitPower(machine.POWER_PULLUP_PIN)
-	hardware.OpenUART()
-
-
-
-
-
-	kb := keyboard.New()
-	m60 := hardware.NewDevice(hardware.ROWS, hardware.COLS)
-	rgb := hardware.InitRGB()
-
-	rgb.Set_PWM_Pixel(63, [3]uint8{0, 0, 255})
+	led.Set_PWM_Pixel(63, [3]uint8{255, 0, 0})
 	time.Sleep(time.Millisecond * 500)
-	rgb.Set_PWM_Pixel(63, [3]uint8{0, 0, 0})
+	led.Set_PWM_Pixel(63, [3]uint8{0, 0, 0})
 	time.Sleep(time.Millisecond * 500)
 
-	rgb.Set_PWM_Pixel(63, [3]uint8{0, 0, 255})
+	led.Set_PWM_Pixel(63, [3]uint8{255, 0, 0})
 	time.Sleep(time.Millisecond * 500)
-	rgb.Set_PWM_Pixel(63, [3]uint8{0, 0, 0})
+	led.Set_PWM_Pixel(63, [3]uint8{0, 0, 0})
 	time.Sleep(time.Millisecond * 500)
 
-	//var exten_rgb extensions.Extensions
-	exten_rgb := new(extensions.RGBLED)
-	exten_rgb.Obj = rgb
+	
+	err := run()
+	if err != nil {
+		log.Fatal(err)
+		log.Println("Enter Bootloader...")
+		machine.EnterUF2Bootloader()
+	}
+}
 
+func run() error {
+	d := keyboard.New()
 
-	for {
-		// Press the button for entering Bootloader
-		if btn.Get() == false {
-			log.Println("Enter Bootloader...")
-			machine.EnterUF2Bootloader()
+	kboard := d.AddMatrixKeyboard(COLS, ROWS, KEYMAP)
+
+	kboard.SetCallback(func(layer, index int, state keyboard.State) {
+		var colour[3]uint8
+		if layer == 0 {
+			colour = [3]uint8{255, 255, 255}
+		} else {
+			colour = [3]uint8{255, 0, 0}
 		}
-
-		err := m60.UpdateStatus()
-		if err != nil {
-			print(fmt.Errorf("Unknow Error!"))
-			break
+		if state == keyboard.Press {
+			led.Set_PWM_Pixel(index, colour)
+		} else {
+			led.Set_PWM_Pixel(index, [3]uint8{0, 0, 0})
 		}
-
-		for i:=0; i<61; i++ {
-			m60.Keys[i].Keycode = KEYMAP[m60.Layer][i]
-			if !m60.Keys[i].NeedChange {
-				continue
-			}
-
-			if m60.Keys[i].Ispress {
-				//rgb.Set_PWM_Pixel(m60.Keys[i].Num, [3]uint8{255, 255, 255})
-				exten_rgb.WhilePress(m60.Keys[i])
-				if m60.Keys[i].Keycode == KeyFN {
-					m60.Layer = 1
-					log.Println("Layer 1\n")
-					continue
-				}
-				kb.Down(m60.Keys[i].Keycode)
-				println("Press: ",m60.Keys[i].Num, m60.Keys[i].Keycode)
-				fmt.Print()
-			} else {
-				//rgb.Set_PWM_Pixel(m60.Keys[i].Num, [3]uint8{0, 0, 0})
-				exten_rgb.WhileRelease(m60.Keys[i])
-				if m60.Keys[i].Keycode == KeyFN {
-					m60.Layer = 0
-					log.Println("Layer 0\n")
-					kb.Release()
-					continue
-				}
-				kb.Up(m60.Keys[i].Keycode)
-				println("Release: ",m60.Keys[i].Num, m60.Keys[i].Keycode)
-			}
-			m60.Keys[i].NeedChange = false
+		log.Printf("rk: %d %d %d\n", layer, index, state)
+		//changed.Set(1)
+	})
+	//fix for M60 keyboard
+	for i:=0; i<61; i++ {
+		for f := range KEYMAP{
+			kboard.SetKeycode(f, COORDS[i], KEYMAP[f][i])
 		}
-
+	}
+	// for Vial
+	loadKeyboardDef()
+	keyboard.Save()
+	
+	err := d.Init()
+	if err != nil {
+		return err
 	}
 
+	d.Debug = true
+	return d.Loop(context.Background())
+}
 
-	kb.Release()
-	log.Println(fmt.Errorf("Unknow Error!"))
-	machine.EnterUF2Bootloader()
+func openUART() {
+	config := machine.UARTConfig{
+		BaudRate: 115200,
+		TX:       machine.UART_TX_PIN,
+		RX:       machine.UART_RX_PIN,
+	}
+	machine.UART0.Configure(config)
+}
+
+func initRGB() is31fl3733.Device {
+	rgb := is31fl3733.New(machine.I2C0, is31fl3733.FUNCTION_REGISTER)
+	err := rgb.Bus.Configure(machine.I2CConfig{
+		Mode:      machine.I2CModeController,
+		Frequency: 400000,
+		SCL:       machine.SCL_PIN,
+		SDA:       machine.SDA_PIN,
+	})
+	if err != nil {
+		println("could not configure I2C:", err)
+	}
+
+	err = rgb.Init()
+	println("RGB init done!")
+	if err != nil {
+		println("could not init:", err)
+	}
+	err = rgb.EnableAllPixels()
+	if err != nil {
+		println("could not open lights:", err)
+	}
+	println("RGB all open!")
+	return rgb
 }

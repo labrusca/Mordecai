@@ -30,7 +30,7 @@ const (
 	LED_BLUE  Pin = P0_31
 )
 
-// QSPI pins (unused)
+// QSPI pins
 const (
 	QSPI_SCK   = P1_11
 	QSPI_CS    = P1_13
@@ -96,9 +96,17 @@ const (
 
 // SPI pins (unused)
 const (
-	SPI0_SCK_PIN = P1_15
+	SPI0_SCK_PIN = P1_11
 	SPI0_SDO_PIN = P1_13
 	SPI0_SDI_PIN = P1_14
+)
+
+// MX25R6435F
+const (
+	SPI_SCK_PIN = P1_11
+	SPI_WP_PIN = P1_15
+	SPI_RESET_PIN = P1_12
+	SPI_CS_PIN = P1_13
 )
 
 var (
